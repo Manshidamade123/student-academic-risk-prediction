@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 
 # Load the trained machine learning model
-model = joblib.load("student_risk_model.pkl")
+model = joblib.load("student_risk_model (1).pkl")
 
 st.set_page_config(
     page_title="Student Academic Risk Predictor",
