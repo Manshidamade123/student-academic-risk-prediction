@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from supabase import create_client
 from datetime import date
 
@@ -367,6 +368,117 @@ col4.metric(
 st.caption(
     "CGPA is entered by you. PlaceTrack does not currently "
     "calculate or predict your actual probability of placement."
+)
+
+# ---------------- PROGRESS VISUALIZATIONS ----------------
+
+st.divider()
+st.header("📈 Your Progress Overview")
+
+# 1. Semester-wise SGPA chart
+left_col, right_col = st.columns(2)
+
+with left_col:
+    st.subheader("🎓 Semester Performance")
+
+    if semester_rows:
+        sgpa_chart = pd.DataFrame([
+            {
+                "Semester": f"Sem {row['semester_number']}",
+                "SGPA": float(row["sgpa"])
+            }
+            for row in semester_rows
+        ])
+
+        sgpa_chart = sgpa_chart.sort_values("Semester")
+
+        st.bar_chart(
+            sgpa_chart,
+            x="Semester",
+            y="SGPA",
+            y_label="SGPA (out of 10)"
+        )
+    else:
+        st.info(
+            "Add your semester-wise SGPA in the Academics tab "
+            "to see your chart."
+        )
+
+# 2. Technical skill progress
+with right_col:
+    st.subheader("💻 Technical Skills")
+
+    skill_statuses = ["Not started", "Learning", "Completed"]
+
+    status_counts = {
+        status: sum(
+            1 for row in skill_rows
+            if row.get("status") == status
+        )
+        for status in skill_statuses
+    }
+
+    if skill_rows:
+        skill_chart = pd.DataFrame({
+            "Status": list(status_counts.keys()),
+            "Topics": list(status_counts.values())
+        })
+
+        st.bar_chart(
+            skill_chart,
+            x="Status",
+            y="Topics",
+            y_label="Number of Topics"
+        )
+
+        total_topics = len(skill_rows)
+        completed_topics = status_counts["Completed"]
+
+        st.progress(completed_topics / total_topics)
+
+        st.caption(
+            f"{completed_topics} of {total_topics} tracked topics completed."
+        )
+    else:
+        st.info(
+            "Add topics in the Technical Skills tab "
+            "to see your learning progress."
+        )
+
+# 3. Daily study activity
+st.subheader("⏰ Daily Study Hours")
+
+if daily_rows:
+    recent_logs = sorted(
+        daily_rows,
+        key=lambda row: str(row["log_date"])
+    )[-7:]
+
+    study_chart = pd.DataFrame([
+        {
+            "Date": str(row["log_date"]),
+            "Study Hours": round(
+                float(row["study_minutes"]) / 60, 2
+            )
+        }
+        for row in recent_logs
+    ])
+
+    st.line_chart(
+        study_chart,
+        x="Date",
+        y="Study Hours",
+        y_label="Hours"
+    )
+else:
+    st.info(
+        "Start recording your daily study time "
+        "to see your study activity chart."
+    )
+
+st.caption(
+    "These visualizations summarize your saved academic and learning "
+    "records. They do not predict your probability of getting placed."
 )
 
 # ---------------- MAIN SECTIONS ----------------
